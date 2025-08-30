@@ -1,4 +1,4 @@
-package de.jlkp.ai;
+package de.jlkp.ai.data;
 
 import java.util.List;
 

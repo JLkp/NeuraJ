@@ -1,4 +1,4 @@
-package de.jlkp.ai;
+package de.jlkp.ai.data;
 
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
@@ -63,4 +63,6 @@ public class DefaultTrainingSet implements TrainingSet {
     public List<String> getLabelNames() {
         return uniqueLabels;
     }
+
+
 }

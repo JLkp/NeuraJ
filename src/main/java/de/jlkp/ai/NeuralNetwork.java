@@ -1,5 +1,7 @@
 package de.jlkp.ai;
 
+import de.jlkp.ai.data.DefaultTrainingSet;
+import de.jlkp.ai.data.TrainingSet;
 import de.jlkp.ai.layer.DenseLayer;
 import de.jlkp.ai.optimizer.Optimizer;
 import org.apache.commons.math3.linear.RealVector;
@@ -7,7 +9,7 @@ import org.apache.commons.math3.linear.RealVector;
 public interface NeuralNetwork {
 
     // lrFit: Wenn Wert da wird Learning Rate nach jeder Epoche um diesen Faktor multipliziert
-    void train(TrainingSet data, int epochs, double learningRate, int batchSize, int miniBatchSize, TrainingSet validationSet, ReduceLROnPlateau reduceLROnPlateau);
+    void train(DefaultTrainingSet data, int epochs, double learningRate, int batchSize, TrainingSet validationSet);
 
     RealVector predict(RealVector input);
 
@@ -15,5 +17,5 @@ public interface NeuralNetwork {
 
     void addHiddenLayer(DenseLayer layer);
 
-    void compile(double maxInputValue, Optimizer optimizer); // TODO: optimizer und loss function hinzufügen
+    void compile(double maxInputValue, Optimizer optimizer);
 }

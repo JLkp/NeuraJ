@@ -3,6 +3,9 @@ package de.jlkp.ai;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import de.jlkp.ai.cache.ForwardCache;
 import de.jlkp.ai.cache.OptimizerCache;
+import de.jlkp.ai.data.DataSet;
+import de.jlkp.ai.data.DefaultTrainingSet;
+import de.jlkp.ai.data.TrainingSet;
 import de.jlkp.ai.layer.DenseLayer;
 import de.jlkp.ai.optimizer.Optimizer;
 import lombok.Getter;
@@ -41,11 +44,8 @@ public class FNN implements NeuralNetwork, Serializable {
     }
 
     @Override
-    public void train(TrainingSet trainingSet, int epochs, double learningRate, int batchSize, int miniBatchSize, TrainingSet validationSet, ReduceLROnPlateau reduceLROnPlateau) {
-
-    }
-
-    public void train(TrainingSet data, int epochs, double learningRate, int batchSize) {
+    public void train(DefaultTrainingSet data, int epochs, double learningRate, int batchSize, TrainingSet validationSet) {
+        validationSet = null; // Not used in this implementation
         optimizer.initialize(layer, learningRate);
         DataSet ds = data.getData();
         labelNames = data.getLabelNames();
@@ -90,8 +90,8 @@ public class FNN implements NeuralNetwork, Serializable {
         }
     }
 
-
-    public void train(TrainingSet trainingSet, int epochs, double learningRate, TrainingSet validationSet) {
+    @Deprecated
+    public void train(DefaultTrainingSet trainingSet, int epochs, double learningRate, TrainingSet validationSet) {
         log.info("Training started... ");
 
         DataSet ds = trainingSet.getData();

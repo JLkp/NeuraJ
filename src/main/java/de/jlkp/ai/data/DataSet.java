@@ -1,4 +1,4 @@
-package de.jlkp.ai;
+package de.jlkp.ai.data;
 
 import lombok.Data;
 import org.apache.commons.math3.linear.RealMatrix;

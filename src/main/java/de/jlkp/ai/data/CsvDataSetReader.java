@@ -1,4 +1,4 @@
-package de.jlkp.ai;
+package de.jlkp.ai.data;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
