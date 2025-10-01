@@ -17,7 +17,8 @@ public class StartExperimental {
     public static void main(String[] args) {
         log.info("Starting experimental code...");
 
-        currentBuild();
+        // currentBuild();
+
     }
 
     // this is how the current neural network is build, trained and used
