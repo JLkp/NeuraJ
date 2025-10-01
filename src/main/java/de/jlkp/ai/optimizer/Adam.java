@@ -82,10 +82,10 @@ public class Adam implements Optimizer {
             //log.info("Backward correction: {} \n {}", dw, db);
 
 
-            Vdw.set(j, Vdw.get(j).scalarMultiply(beta1).add(dw.scalarMultiply(1 - beta1)));
+            Vdw.set(j, Vdw.get(j).scalarMultiply(beta1).add(dw.scalarMultiply(1 - beta1)));  // TODO: optimize
             Vdb.set(j, Vdb.get(j).mapMultiply(beta1).add(db.mapMultiply(1 - beta1)));
 
-            Sdw.set(j, Sdw.get(j).scalarMultiply(beta2).add(AiUtils.ebeMultiply(dw, dw).scalarMultiply(1 - beta2)));
+            Sdw.set(j, Sdw.get(j).scalarMultiply(beta2).add(AiUtils.ebeMultiply(dw, dw).scalarMultiply(1 - beta2)));  // TODO: optimize
             Sdb.set(j, Sdb.get(j).mapMultiply(beta2).add(db.ebeMultiply(db).mapMultiply(1 - beta2)));
 
 
@@ -97,7 +97,7 @@ public class Adam implements Optimizer {
 
 
             Correction correction = new Correction();
-            correction.setWeightsCorrection(AiUtils.ebeDivide(vdwCorrected, AiUtils.ebePow(sdwCorrected, 0.5).scalarAdd(epsilon)).scalarMultiply(learningRate));
+            correction.setWeightsCorrection(AiUtils.ebeDivide(vdwCorrected, AiUtils.ebePow(sdwCorrected, 0.5).scalarAdd(epsilon)).scalarMultiply(learningRate)); // TODO: optimize
             correction.setBiasCorrection(vdbCorrected.ebeDivide(AiUtils.ebePow(sdbCorrected, 0.5).mapAdd(epsilon)).mapMultiply(learningRate));
 
             corrections.add(correction);
