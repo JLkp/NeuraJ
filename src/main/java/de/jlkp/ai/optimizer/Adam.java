@@ -7,10 +7,7 @@ import de.jlkp.ai.layer.DenseLayer;
 import de.jlkp.ai.loss.LossFunction;
 import de.jlkp.ai.utils.AiUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.math3.linear.Array2DRowRealMatrix;
-import org.apache.commons.math3.linear.ArrayRealVector;
-import org.apache.commons.math3.linear.RealMatrix;
-import org.apache.commons.math3.linear.RealVector;
+import org.apache.commons.math3.linear.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,10 +22,10 @@ public class Adam implements Optimizer {
 
     private int t = 0; // time step, used for bias correction
 
-    private List<RealMatrix> Vdw;
+    private List<BlockRealMatrix> Vdw;
     private List<RealVector> Vdb;
 
-    private List<RealMatrix> Sdw;
+    private List<BlockRealMatrix> Sdw;
     private List<RealVector> Sdb;
 
     private List<DenseLayer> layers;
@@ -47,12 +44,12 @@ public class Adam implements Optimizer {
         Sdb = new ArrayList<>();
 
         for (DenseLayer l : layers) {
-            RealMatrix weightMatrix = l.getWeights();
+            BlockRealMatrix weightMatrix = new BlockRealMatrix(l.getWeights().getData());
             RealVector biasVector = l.getBias();
-            Vdw.add(new Array2DRowRealMatrix(weightMatrix.getRowDimension(), weightMatrix.getColumnDimension()));
+            Vdw.add(new BlockRealMatrix(weightMatrix.getRowDimension(), weightMatrix.getColumnDimension()));
             Vdb.add(new ArrayRealVector(biasVector.getDimension()));
 
-            Sdw.add(new Array2DRowRealMatrix(weightMatrix.getRowDimension(), weightMatrix.getColumnDimension()));
+            Sdw.add(new BlockRealMatrix(weightMatrix.getRowDimension(), weightMatrix.getColumnDimension()));
             Sdb.add(new ArrayRealVector(biasVector.getDimension()));
         }
     }
@@ -82,22 +79,22 @@ public class Adam implements Optimizer {
             //log.info("Backward correction: {} \n {}", dw, db);
 
 
-            Vdw.set(j, Vdw.get(j).scalarMultiply(beta1).add(dw.scalarMultiply(1 - beta1)));  // TODO: optimize
+            Vdw.set(j, AiUtils.scalarMultiplyBlock(Vdw.get(j), beta1).add(AiUtils.scalarMultiplyBlock(dw, (1 - beta1))));
             Vdb.set(j, Vdb.get(j).mapMultiply(beta1).add(db.mapMultiply(1 - beta1)));
 
-            Sdw.set(j, Sdw.get(j).scalarMultiply(beta2).add(AiUtils.ebeMultiply(dw, dw).scalarMultiply(1 - beta2)));  // TODO: optimize
+            Sdw.set(j, AiUtils.scalarMultiplyBlock(Sdw.get(j), beta2).add( AiUtils.scalarMultiplyBlock(AiUtils.ebeMultiplyBlock(dw,dw), (1 - beta2)) ));
             Sdb.set(j, Sdb.get(j).mapMultiply(beta2).add(db.ebeMultiply(db).mapMultiply(1 - beta2)));
 
 
-            RealMatrix vdwCorrected = Vdw.get(j).scalarMultiply(1.0 / (1.0 - Math.pow(beta1, t)));
-            RealVector vdbCorrected = Vdb.get(j).mapMultiply(1.0 / (1.0 - Math.pow(beta1, t)));
+            RealMatrix vdwCorrected = Vdw.get(j).scalarMultiply(1.0 / (1.0 - Math.pow(beta1, t)));  //TODO: change to BlockRealMatrix
+            RealVector vdbCorrected = Vdb.get(j).mapMultiply(1.0 / (1.0 - Math.pow(beta1, t))); //TODO: change to BlockRealMatrix
 
-            RealMatrix sdwCorrected = Sdw.get(j).scalarMultiply(1.0 / (1.0 - Math.pow(beta2, t)));
-            RealVector sdbCorrected = Sdb.get(j).mapMultiply(1.0 / (1.0 - Math.pow(beta2, t)));
+            RealMatrix sdwCorrected = Sdw.get(j).scalarMultiply(1.0 / (1.0 - Math.pow(beta2, t))); //TODO: change to BlockRealMatrix
+            RealVector sdbCorrected = Sdb.get(j).mapMultiply(1.0 / (1.0 - Math.pow(beta2, t))); //TODO: change to BlockRealMatrix
 
 
             Correction correction = new Correction();
-            correction.setWeightsCorrection(AiUtils.ebeDivide(vdwCorrected, AiUtils.ebePow(sdwCorrected, 0.5).scalarAdd(epsilon)).scalarMultiply(learningRate)); // TODO: optimize
+            correction.setWeightsCorrection(AiUtils.ebeDivide(vdwCorrected, AiUtils.ebePow(sdwCorrected, 0.5).scalarAdd(epsilon)).scalarMultiply(learningRate)); // TODO: change to BlockRealMatrix
             correction.setBiasCorrection(vdbCorrected.ebeDivide(AiUtils.ebePow(sdbCorrected, 0.5).mapAdd(epsilon)).mapMultiply(learningRate));
 
             corrections.add(correction);

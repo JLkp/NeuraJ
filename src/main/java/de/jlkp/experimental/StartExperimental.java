@@ -17,8 +17,10 @@ public class StartExperimental {
     public static void main(String[] args) {
         log.info("Starting experimental code...");
 
-        // currentBuild();
 
+
+        currentBuild();
+//        smallTest();
     }
 
     // this is how the current neural network is build, trained and used
@@ -48,7 +50,38 @@ public class StartExperimental {
         model.addHiddenLayer(new DenseLayer(new SoftmaxActivation(), 5));
 
         model.compile(255, new Adam(new CrossEntropy()));
-        model.train(t, 20, 0.01, 10, null);
+        model.train(t, 5, 0.01, 10, null);
+
+        log.info("{}", model.evaluate(t2));
+
+    }
+
+    public static void smallTest(){
+        // import of trainset
+        String trainPath = StartExperimental.class
+                .getClassLoader()
+                .getResource("iris_train.csv")
+                .getPath();
+        DefaultTrainingSet t = new DefaultTrainingSet();
+        DataSetReader dsr = new CsvDataSetReader(trainPath);
+        t.importData(dsr);
+
+        // import of testset
+        String testPath = StartExperimental.class
+                .getClassLoader()
+                .getResource("iris_test.csv")
+                .getPath();
+        DefaultTrainingSet t2 = new DefaultTrainingSet();
+        DataSetReader dsr2 = new CsvDataSetReader(testPath);
+        t2.importData(dsr2);
+
+
+        FNN model = new FNN(4);
+        model.addHiddenLayer(new DenseLayer(new ReLuActivation(), 2));
+        model.addHiddenLayer(new DenseLayer(new SoftmaxActivation(), 3));
+
+        model.compile(255, new Adam(new CrossEntropy()));
+        model.train(t, 2, 0.01, 10, null);
 
         log.info("{}", model.evaluate(t2));
 
