@@ -78,23 +78,64 @@ public class Adam implements Optimizer {
             RealVector db = backwardCache.getCorrection().getBiasCorrection();
             //log.info("Backward correction: {} \n {}", dw, db);
 
+            Vdw.get(j).walkInOptimizedOrder(new DefaultRealMatrixChangingVisitor() {
+                @Override
+                public double visit(int row, int column, double value) {
+                    return beta1 * value + (1 - beta1) * dw.getEntry(row, column);
+                }
+            });
+//            Vdb.set(j, Vdb.get(j).mapMultiply(beta1).add(db.mapMultiply(1 - beta1)));
+            Vdb.get(j).walkInOptimizedOrder(new RealVectorChangingVisitor() {
+                @Override
+                public void start(int dimension, int start, int end) {
 
-            Vdw.set(j, AiUtils.scalarMultiplyBlock(Vdw.get(j), beta1).add(AiUtils.scalarMultiplyBlock(dw, (1 - beta1))));
-            Vdb.set(j, Vdb.get(j).mapMultiply(beta1).add(db.mapMultiply(1 - beta1)));
+                }
 
-            Sdw.set(j, AiUtils.scalarMultiplyBlock(Sdw.get(j), beta2).add( AiUtils.scalarMultiplyBlock(AiUtils.ebeMultiplyBlock(dw,dw), (1 - beta2)) ));
-            Sdb.set(j, Sdb.get(j).mapMultiply(beta2).add(db.ebeMultiply(db).mapMultiply(1 - beta2)));
+                @Override
+                public double visit(int index, double value) {
+                    return beta1 * value + (1 - beta1) * db.getEntry(index);
+                }
 
+                @Override
+                public double end() {
+                    return 0;
+                }
+            });
 
-            RealMatrix vdwCorrected = Vdw.get(j).scalarMultiply(1.0 / (1.0 - Math.pow(beta1, t)));  //TODO: change to BlockRealMatrix
-            RealVector vdbCorrected = Vdb.get(j).mapMultiply(1.0 / (1.0 - Math.pow(beta1, t))); //TODO: change to BlockRealMatrix
+            Sdw.get(j).walkInOptimizedOrder(new DefaultRealMatrixChangingVisitor() {
+                @Override
+                public double visit(int row, int column, double value) {
+                    return beta2 * value + (1 - beta2) * dw.getEntry(row, column) * dw.getEntry(row, column);
+                }
+            });
 
-            RealMatrix sdwCorrected = Sdw.get(j).scalarMultiply(1.0 / (1.0 - Math.pow(beta2, t))); //TODO: change to BlockRealMatrix
-            RealVector sdbCorrected = Sdb.get(j).mapMultiply(1.0 / (1.0 - Math.pow(beta2, t))); //TODO: change to BlockRealMatrix
+//            Sdb.set(j, Sdb.get(j).mapMultiply(beta2).add(db.ebeMultiply(db).mapMultiply(1 - beta2)));
+            Sdb.get(j).walkInOptimizedOrder(new RealVectorChangingVisitor() {
+                @Override
+                public void start(int dimension, int start, int end) {
+
+                }
+
+                @Override
+                public double visit(int index, double value) {
+                    return beta2 * value + (1 - beta2) * db.getEntry(index) * db.getEntry(index);
+                }
+
+                @Override
+                public double end() {
+                    return 0;
+                }
+            });
+
+            RealMatrix vdwCorrected = Vdw.get(j).scalarMultiply(1.0 / (1.0 - Math.pow(beta1, t)));  //TODO: check for possible changes
+            RealVector vdbCorrected = Vdb.get(j).mapMultiply(1.0 / (1.0 - Math.pow(beta1, t))); //TODO: check for possible changes
+
+            RealMatrix sdwCorrected = Sdw.get(j).scalarMultiply(1.0 / (1.0 - Math.pow(beta2, t))); //TODO: check for possible changes
+            RealVector sdbCorrected = Sdb.get(j).mapMultiply(1.0 / (1.0 - Math.pow(beta2, t))); //TODO: check for possible changes
 
 
             Correction correction = new Correction();
-            correction.setWeightsCorrection(AiUtils.ebeDivide(vdwCorrected, AiUtils.ebePow(sdwCorrected, 0.5).scalarAdd(epsilon)).scalarMultiply(learningRate)); // TODO: change to BlockRealMatrix
+            correction.setWeightsCorrection(AiUtils.ebeDivide(vdwCorrected, AiUtils.ebePow(sdwCorrected, 0.5).scalarAdd(epsilon)).scalarMultiply(learningRate)); // TODO: change to walkInOptimizedOrder
             correction.setBiasCorrection(vdbCorrected.ebeDivide(AiUtils.ebePow(sdbCorrected, 0.5).mapAdd(epsilon)).mapMultiply(learningRate));
 
             corrections.add(correction);

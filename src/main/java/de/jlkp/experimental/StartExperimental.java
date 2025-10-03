@@ -9,7 +9,10 @@ import de.jlkp.ai.activation.SoftmaxActivation;
 import de.jlkp.ai.layer.DenseLayer;
 import de.jlkp.ai.loss.CrossEntropy;
 import de.jlkp.ai.optimizer.Adam;
+import de.jlkp.ai.utils.AiUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.math3.linear.DefaultRealMatrixChangingVisitor;
+import org.apache.commons.math3.linear.RealMatrix;
 
 @Slf4j
 public class StartExperimental {
@@ -18,9 +21,14 @@ public class StartExperimental {
         log.info("Starting experimental code...");
 
 
-
+        long start = System.nanoTime();
         currentBuild();
 //        smallTest();
+        long end = System.nanoTime();
+        long duration = (end - start);  //divide by 1000000 to get milliseconds.
+        log.info("Duration: {} ms", duration / 1_000_000);
+
+
     }
 
     // this is how the current neural network is build, trained and used
