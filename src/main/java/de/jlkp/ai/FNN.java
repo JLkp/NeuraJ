@@ -43,27 +43,28 @@ public class FNN implements NeuralNetwork, Serializable {
         this.inputDim = inputDim;
     }
 
+    /** Method that trains the network*/
     @Override
-    public void train(DefaultTrainingSet data, int epochs, double learningRate, int batchSize, TrainingSet validationSet) {
-        validationSet = null; // Not used in this implementation
-        optimizer.initialize(layer, learningRate);
-        DataSet ds = data.getData();
+    public void train(DefaultTrainingSet data, int epochs, double learningRate, int batchSize, boolean verbose) {
+        optimizer.initialize(layer, learningRate); // Initialize the optimizer with the layers and learning rate to fit the networks needs
+        DataSet ds = data.getData(); // Get the dataset from the training set
         labelNames = data.getLabelNames();
-        RealMatrix samples = ds.getSamples().scalarMultiply(1.0 / maxInputValue);
-        log.info("{}x{}", samples.getRowDimension(), samples.getColumnDimension());
+        RealMatrix samples = ds.getSamples().scalarMultiply(1.0 / maxInputValue); // normalized the input data
+//        log.info("{}x{}", samples.getRowDimension(), samples.getColumnDimension());
         RealMatrix labels = ds.getLabels();
 
-        // log.info("{}", ds);
-
+        // loop for training epochs
         for (int i = 0; i < epochs; i++) {
             shuffle(samples, labels);
-            int batches = samples.getColumnDimension() / batchSize;
+            int batches = samples.getColumnDimension() / batchSize;  // get number of batches
             double loss = 0.0;
 
+            // loop for each batch
             for (int batchIndex = 0; batchIndex < batches; batchIndex++) {
                 RealMatrix inputBatch = samples.getSubMatrix(0, samples.getRowDimension() - 1, batchIndex * batchSize, (batchIndex + 1) * batchSize - 1);
                 RealMatrix labelBatch = labels.getSubMatrix(0, labels.getRowDimension() - 1, batchIndex * batchSize, (batchIndex + 1) * batchSize - 1);
 
+                // Forward pass through all layers, storing the forward caches for backpropagation
                 List<ForwardCache> forwardCaches = new ArrayList<>();
                 for (DenseLayer layer : layer) {
                     ForwardCache forwardCache = new ForwardCache();
@@ -71,73 +72,28 @@ public class FNN implements NeuralNetwork, Serializable {
                     forwardCaches.add(forwardCache);
                 }
 
-                //log.info("Fehler: {}", lossFunction.loss(labelBatch, inputBatch));
-                loss += optimizer.getLossFunction().loss(labelBatch, inputBatch);
+                loss += optimizer.getLossFunction().loss(labelBatch, inputBatch); // accumulate the loss for this batch
 
+                // Create optimizer cache and apply gradients to get corrections for each layer
                 OptimizerCache optimizerCache = new OptimizerCache(forwardCaches, labelBatch);
                 List<Correction> corrections = optimizer.applyGradient(optimizerCache);
 
+                // Update each layer's parameters using the calculated corrections
                 int j = 0;
                 for (DenseLayer l : layer) {
-                    //log.info(formatMatrix(corrections.get(j).getWeightsCorrection(), 4));
                     l.updateParameters(corrections.get(j));
                     j++;
                 }
 
             }
-            log.info("Loss: {}", loss / batches);
-
-        }
-    }
-
-    @Deprecated
-    public void train(DefaultTrainingSet trainingSet, int epochs, double learningRate, TrainingSet validationSet) {
-        log.info("Training started... ");
-
-        DataSet ds = trainingSet.getData();
-        RealMatrix samples = ds.getSamples().scalarMultiply(1 / maxInputValue);
-        RealMatrix labels = ds.getLabels();
-
-        optimizer.initialize(layer, learningRate);
-
-        for (int i = 0; i < epochs; i++) {
-            for (int sampleIndex = 0; sampleIndex < samples.getColumnDimension(); sampleIndex++) {
-                RealVector sample = samples.getColumnVector(sampleIndex);
-                RealVector label = labels.getColumnVector(sampleIndex);
-
-                RealMatrix outputMatrix = MatrixUtils.createColumnRealMatrix(sample.toArray());
-                RealMatrix labelMatrix = MatrixUtils.createColumnRealMatrix(label.toArray());
-
-                // Forward pass
-                List<ForwardCache> forwardCaches = new ArrayList<>();
-
-                for (DenseLayer layer : layer) {
-                    ForwardCache forwardCache = new ForwardCache();
-                    outputMatrix = layer.forward(outputMatrix, forwardCache);
-                    forwardCaches.add(forwardCache);
-
-                }
-                //log.info("Loss: {}", optimizer.getLossFunction().loss(labelMatrix, outputMatrix));
-                OptimizerCache optimizerCache = new OptimizerCache(forwardCaches, labelMatrix);
-
-                // Backward pass
-                List<Correction> correction = optimizer.applyGradient(optimizerCache);
-                //log.info("Corr: {}", correction.size());
-
-                // update weights and biases
-                int j = 0;
-                for (DenseLayer l : layer) {
-                    l.updateParameters(correction.get(j));
-                    j++;
-                }
-
-
+            if(verbose){ // print loss if verbose is true
+                log.info("Loss: {}", loss / batches);
             }
+
         }
-
-
     }
 
+    /** forwards the input through the network and returns the vector from the last layer*/
     private RealMatrix forward(RealMatrix data) {
         RealMatrix outputVector = data.copy();
         for (DenseLayer layer : layer) {
@@ -146,6 +102,7 @@ public class FNN implements NeuralNetwork, Serializable {
         return outputVector;
     }
 
+    /** Predicts the input*/
     @Override
     public RealVector predict(RealVector input) {
         if (input.getDimension() != inputDim) {
@@ -164,13 +121,15 @@ public class FNN implements NeuralNetwork, Serializable {
 
     }
 
+    /** Evaluates the network*/
     @Override
-    public double evaluate(TrainingSet data) {
+    public double evaluate(TrainingSet data, boolean verbose) {
 
         int correctCount = 0;
-        RealMatrix predictions = forward(data.getData().getSamples().scalarMultiply(1.0 / maxInputValue));
+        RealMatrix predictions = forward(data.getData().getSamples().scalarMultiply(1.0 / maxInputValue)); // run normalized data through the network
         RealMatrix labels = data.getData(labelNames).getLabels();
         int[] corr = new int[labels.getRowDimension()];
+
         for (int i = 0; i < predictions.getColumnDimension(); i++) {
             RealVector prediction = predictions.getColumnVector(i);
             RealVector label = labels.getColumnVector(i);
@@ -181,7 +140,9 @@ public class FNN implements NeuralNetwork, Serializable {
                 corr[prediction.getMaxIndex()] += 1;
             }
         }
-        log.info("Evaluated correct count: {}", corr);
+        if(verbose){
+            log.info("Evaluated correct count: {}", corr);
+        }
         return (double) correctCount / predictions.getColumnDimension();
     }
 
@@ -190,10 +151,12 @@ public class FNN implements NeuralNetwork, Serializable {
         this.layer.add(layer);
     }
 
-
+    /** Compiles the network, initializing weights and biases, and setting the optimizer*/
     @Override
     public void compile(double maxInputValue, Optimizer optimizer) {
         this.maxInputValue = maxInputValue;
+
+        // creates weight matrices and bias vectors for each layer
         int preNeurons = inputDim;
         for (DenseLayer layer : layer) {
             layer.initialize(preNeurons);

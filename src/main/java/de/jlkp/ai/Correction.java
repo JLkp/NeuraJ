@@ -6,7 +6,7 @@ import org.apache.commons.math3.linear.RealVector;
 
 @Data
 public class Correction {
-    RealMatrix weightsCorrection; // correction of the weights: the updated weights after applying the gradient TODO: change to BlockRealMatrix?
+    RealMatrix weightsCorrection; // correction of the weights: the updated weights after applying the gradient
     RealVector biasCorrection; // correction of the biases: the updated biases after applying the gradient
 
     public Correction(RealMatrix weightsCorrection, RealVector biasCorrection) {

@@ -55,9 +55,6 @@ public class DenseLayer {
         RealMatrix da = activationFunction.derivative(forwardCache.getZ());
         RealMatrix grad = AiUtils.ebeMultiply(backpropagationError, da);
 
-        // log.info("Gradient: {}", grad.scalarMultiply(0.1));
-
-
         correction.setWeightsCorrection(grad.multiply(forwardCache.getInput().transpose()));
         correction.setBiasCorrection(AiUtils.meanBias(grad));
 

@@ -20,9 +20,6 @@ public class CrossEntropy implements LossFunction {
                 sum -= y * Math.log(p + EPS);
             }
         }
-//        log.info("\n CrossEntropy Sum Loss: {}, \n CrossEntropy cols: {} \n Loss: {}", sum, cols, sum / cols);
-        // log.info("{}", labels);
-//        log.info("--------------------------------------------------");
         return sum / cols;
     }
 

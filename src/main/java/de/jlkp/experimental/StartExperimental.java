@@ -1,18 +1,15 @@
 package de.jlkp.experimental;
 
-import de.jlkp.ai.data.CsvDataSetReader;
-import de.jlkp.ai.data.DataSetReader;
-import de.jlkp.ai.data.DefaultTrainingSet;
 import de.jlkp.ai.FNN;
 import de.jlkp.ai.activation.ReLuActivation;
 import de.jlkp.ai.activation.SoftmaxActivation;
+import de.jlkp.ai.data.CsvDataSetReader;
+import de.jlkp.ai.data.DataSetReader;
+import de.jlkp.ai.data.DefaultTrainingSet;
 import de.jlkp.ai.layer.DenseLayer;
 import de.jlkp.ai.loss.CrossEntropy;
 import de.jlkp.ai.optimizer.Adam;
-import de.jlkp.ai.utils.AiUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.math3.linear.DefaultRealMatrixChangingVisitor;
-import org.apache.commons.math3.linear.RealMatrix;
 
 @Slf4j
 public class StartExperimental {
@@ -58,9 +55,9 @@ public class StartExperimental {
         model.addHiddenLayer(new DenseLayer(new SoftmaxActivation(), 5));
 
         model.compile(255, new Adam(new CrossEntropy()));
-        model.train(t, 5, 0.01, 10, null);
+        model.train(t, 5, 0.01, 10, true);
 
-        log.info("{}", model.evaluate(t2));
+        log.info("{}", model.evaluate(t2, false));
 
     }
 
@@ -89,9 +86,9 @@ public class StartExperimental {
         model.addHiddenLayer(new DenseLayer(new SoftmaxActivation(), 3));
 
         model.compile(255, new Adam(new CrossEntropy()));
-        model.train(t, 2, 0.01, 10, null);
+        model.train(t, 2, 0.01, 10, true);
 
-        log.info("{}", model.evaluate(t2));
+        log.info("{}", model.evaluate(t2, false));
 
     }
 

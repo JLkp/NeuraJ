@@ -9,11 +9,11 @@ import org.apache.commons.math3.linear.RealVector;
 public interface NeuralNetwork {
 
     // lrFit: Wenn Wert da wird Learning Rate nach jeder Epoche um diesen Faktor multipliziert
-    void train(DefaultTrainingSet data, int epochs, double learningRate, int batchSize, TrainingSet validationSet);
+    void train(DefaultTrainingSet data, int epochs, double learningRate, int batchSize, boolean verbose);
 
     RealVector predict(RealVector input);
 
-    double evaluate(TrainingSet data);
+    double evaluate(TrainingSet data, boolean verbose);
 
     void addHiddenLayer(DenseLayer layer);
 
