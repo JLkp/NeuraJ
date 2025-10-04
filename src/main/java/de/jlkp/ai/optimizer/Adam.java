@@ -75,8 +75,8 @@ public class Adam implements Optimizer {
         for (DenseLayer layer : layers.reversed()) {
             BackwardCache backwardCache = layer.backward(lossGradient, optimizerCache.getForwardCaches().removeLast());
 
-            RealMatrix dw = backwardCache.getCorrection().getWeightsCorrection(); // get delta weights
-            RealVector db = backwardCache.getCorrection().getBiasCorrection(); // get delta bias
+            RealMatrix dw = backwardCache.getCorrection().getWeightsCorrection(); // get delta weights/gradient for weights
+            RealVector db = backwardCache.getCorrection().getBiasCorrection(); // get delta bias/gradient for biases
             //log.info("Backward correction: {} \n {}", dw, db);
 
             Vdw.get(j).walkInOptimizedOrder(new DefaultRealMatrixChangingVisitor() {  // calculate first momentum for weights

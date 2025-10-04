@@ -22,10 +22,10 @@ public class CsvDataSetReader implements DataSetReader {
             br.readLine();
             String line;
             while ((line = br.readLine()) != null) {
-                String[] parts = line.split(","); // CSV-Trennung per Komma
-                if (parts.length < 2) continue; // Zeile überspringen, wenn keine Daten
+                String[] parts = line.split(","); // csv separation with comma
+                if (parts.length < 2) continue; // skip line, if no data
 
-                labels.add(parts[0]); // Das Label vorne speichern
+                labels.add(parts[0]); // safe label at front
 
                 double[] row = new double[parts.length - 1];
                 for (int i = 1; i < parts.length; i++) {
@@ -41,7 +41,6 @@ public class CsvDataSetReader implements DataSetReader {
 
     @Override
     public List<String> getLabels() {
-//        return List.of("Haus", "Ananas", "Haus", "Baum", "Baum", "Baum", "Ananas", "Ananas");
         List<String> labels = new ArrayList<>();
         List<double[]> dataRows = new ArrayList<>();
 
@@ -49,10 +48,10 @@ public class CsvDataSetReader implements DataSetReader {
             br.readLine();
             String line;
             while ((line = br.readLine()) != null) {
-                String[] parts = line.split(","); // CSV-Trennung per Komma
-                if (parts.length < 2) continue; // Zeile überspringen, wenn keine Daten
+                String[] parts = line.split(","); // csv separation with comma
+                if (parts.length < 2) continue; // skip line, if no data
 
-                labels.add(parts[0]); // Das Label vorne speichern
+                labels.add(parts[0]); // save label at the front
 
                 double[] row = new double[parts.length - 1];
                 for (int i = 1; i < parts.length; i++) {

@@ -19,8 +19,8 @@ public class StartExperimental {
 
 
         long start = System.nanoTime();
-        currentBuild();
-//        smallTest();
+//        currentBuild();
+        smallTest();
         long end = System.nanoTime();
         long duration = (end - start);  //divide by 1000000 to get milliseconds.
         log.info("Duration: {} ms", duration / 1_000_000);

@@ -146,6 +146,7 @@ public class FNN implements NeuralNetwork, Serializable {
         return (double) correctCount / predictions.getColumnDimension();
     }
 
+    /** Add a hidden layer to the network*/
     @Override
     public void addHiddenLayer(DenseLayer layer) {
         this.layer.add(layer);
@@ -170,6 +171,7 @@ public class FNN implements NeuralNetwork, Serializable {
 
     }
 
+    /** Prints summary of the network*/
     public String summary() {
         StringBuilder sb = new StringBuilder();
         sb.append("\n");

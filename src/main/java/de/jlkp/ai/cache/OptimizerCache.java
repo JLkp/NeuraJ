@@ -9,7 +9,7 @@ import java.util.List;
 @Data
 public class OptimizerCache {
     List<ForwardCache> forwardCaches;  // all forward caches of the layers
-    RealMatrix labelVector;
+    RealMatrix labelVector; // keeps the labels of the current batch
 
     public OptimizerCache(List<ForwardCache> forwardCaches, RealMatrix labelVector) {
         this.forwardCaches = forwardCaches;
