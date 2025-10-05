@@ -8,9 +8,10 @@ import org.apache.commons.math3.linear.RealMatrix;
 public class MSE implements LossFunction {
     @Override
     public double loss(RealMatrix label, RealMatrix output) {
-        if (label.getRowDimension() != output.getRowDimension() ||
-                label.getColumnDimension() != output.getColumnDimension()) {
-            throw new IllegalArgumentException("Matrizen müssen die gleichen Dimensionen haben.");
+        if (label.getRowDimension() != output.getRowDimension()) {
+            throw new IllegalArgumentException("Matrices have to have same row dimension.");
+        }else if(label.getColumnDimension() != output.getColumnDimension()) {
+            throw new IllegalArgumentException("Matrices have to have same column dimension.");
         }
 
         return label.walkInOptimizedOrder(new DefaultRealMatrixChangingVisitor() {
@@ -20,14 +21,12 @@ public class MSE implements LossFunction {
             public double visit(int row, int column, double value) {
                 double diff = value - output.getEntry(row, column);
                 sum += diff * diff;
-                return value; // Rückgabe des unveränderten Wertes
+                return value;
             }
 
             @Override
             public double end() {
-                // Summe der quadrierten Abweichungen zurückgeben
-                return (sum / (label.getRowDimension() * label.getColumnDimension()));
-
+                return (sum / (label.getRowDimension() * label.getColumnDimension())); // return mean squared error
             }
         });
     }

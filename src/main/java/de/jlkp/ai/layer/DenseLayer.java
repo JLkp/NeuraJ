@@ -55,9 +55,6 @@ public class DenseLayer {
         RealMatrix da = activationFunction.derivative(forwardCache.getZ());
         RealMatrix grad = AiUtils.ebeMultiply(backpropagationError, da);
 
-        // log.info("Gradient: {}", grad.scalarMultiply(0.1));
-
-
         correction.setWeightsCorrection(grad.multiply(forwardCache.getInput().transpose()));
         correction.setBiasCorrection(AiUtils.meanBias(grad));
 
@@ -70,7 +67,7 @@ public class DenseLayer {
     public void initialize(int preLayerNeuronCount) {
         this.weights = new Array2DRowRealMatrix(neuronCount, preLayerNeuronCount);
 
-        Random random = new Random();
+        Random random = new Random(42);  // TODO: HERE IS A SEED
         double wScale = activationFunction.getWeightInitScale(preLayerNeuronCount, neuronCount);
         double b = activationFunction.getbiasInit();
 

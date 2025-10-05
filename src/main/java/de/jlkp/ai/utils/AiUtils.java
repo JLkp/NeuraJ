@@ -65,6 +65,31 @@ public class AiUtils {
 
     }
 
+    public static BlockRealMatrix toBlockRealMatrix(RealMatrix a) {
+        if(a instanceof BlockRealMatrix) {
+            return (BlockRealMatrix)a;
+        }
+        return new BlockRealMatrix(a.getData());
+    }
+
+    public static BlockRealMatrix scalarMultiplyBlock(RealMatrix a, double scalar) {
+        BlockRealMatrix result = toBlockRealMatrix(a);
+        for (int i = 0; i < a.getRowDimension(); i++) {
+            for (int j = 0; j < a.getColumnDimension(); j++) {
+                result.setEntry(i, j, a.getEntry(i, j) * scalar);
+            }
+        }
+        return result;
+    }
+
+    public static BlockRealMatrix ebeMultiplyBlock(RealMatrix a, RealMatrix b) {
+        return toBlockRealMatrix(ebeMultiply(a, b));
+    }
+
+    public static BlockRealMatrix ebeDivideBlock(RealMatrix a, RealMatrix b) {
+        return toBlockRealMatrix(ebeDivide(a, b));
+    }
+
     public static double max(RealMatrix matrix) {
         double max = Double.NEGATIVE_INFINITY;
         for (int i = 0; i < matrix.getRowDimension(); i++) {
@@ -116,7 +141,7 @@ public class AiUtils {
         }
 
         int cols = inputs.getColumnDimension();
-        Random rand = new Random();
+        Random rand = new Random(42); // TODO: HERE IS A SEED
 
         // Fisher-Yates-Shuffle
         for (int i = cols - 1; i > 0; i--) {

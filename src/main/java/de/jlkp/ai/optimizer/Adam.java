@@ -7,10 +7,7 @@ import de.jlkp.ai.layer.DenseLayer;
 import de.jlkp.ai.loss.LossFunction;
 import de.jlkp.ai.utils.AiUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.math3.linear.Array2DRowRealMatrix;
-import org.apache.commons.math3.linear.ArrayRealVector;
-import org.apache.commons.math3.linear.RealMatrix;
-import org.apache.commons.math3.linear.RealVector;
+import org.apache.commons.math3.linear.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,10 +22,10 @@ public class Adam implements Optimizer {
 
     private int t = 0; // time step, used for bias correction
 
-    private List<RealMatrix> Vdw;
+    private List<BlockRealMatrix> Vdw;
     private List<RealVector> Vdb;
 
-    private List<RealMatrix> Sdw;
+    private List<BlockRealMatrix> Sdw;
     private List<RealVector> Sdb;
 
     private List<DenseLayer> layers;
@@ -37,6 +34,7 @@ public class Adam implements Optimizer {
         this.lossFunction = lossFunction;
     }
 
+    /** Initializes the optimizer: creates lists for first and second momentum, builds corrections matrices for each layer*/
     public void initialize(List<DenseLayer> layers, double learningRate) {
         this.layers = layers;
         this.learningRate = learningRate;
@@ -47,12 +45,12 @@ public class Adam implements Optimizer {
         Sdb = new ArrayList<>();
 
         for (DenseLayer l : layers) {
-            RealMatrix weightMatrix = l.getWeights();
+            BlockRealMatrix weightMatrix = new BlockRealMatrix(l.getWeights().getData());
             RealVector biasVector = l.getBias();
-            Vdw.add(new Array2DRowRealMatrix(weightMatrix.getRowDimension(), weightMatrix.getColumnDimension()));
+            Vdw.add(new BlockRealMatrix(weightMatrix.getRowDimension(), weightMatrix.getColumnDimension()));
             Vdb.add(new ArrayRealVector(biasVector.getDimension()));
 
-            Sdw.add(new Array2DRowRealMatrix(weightMatrix.getRowDimension(), weightMatrix.getColumnDimension()));
+            Sdw.add(new BlockRealMatrix(weightMatrix.getRowDimension(), weightMatrix.getColumnDimension()));
             Sdb.add(new ArrayRealVector(biasVector.getDimension()));
         }
     }
@@ -62,45 +60,85 @@ public class Adam implements Optimizer {
         return lossFunction;
     }
 
+    /** Calculates the correction matrices for each layer of the network*/
     @Override
     public List<Correction> applyGradient(OptimizerCache optimizerCache) {
         t++;
         List<Correction> corrections = new ArrayList<>();  // updates for weights and biases
-        // log.info("{}", labelVector);
+
         RealMatrix outputVector = optimizerCache.getForwardCaches().getLast().getZ();
-        outputVector = layers.getLast().getActivationFunction().activate(outputVector);
-        //log.info("Output vector: {}", outputVector);
-        //log.info("Output vector: {}", optimizerCache.getLabelVector());
-        RealMatrix lossGradient = lossFunction.gradient(optimizerCache.getLabelVector(), outputVector);
+        outputVector = layers.getLast().getActivationFunction().activate(outputVector); // gets output of the last layer
+        RealMatrix lossGradient = lossFunction.gradient(optimizerCache.getLabelVector(), outputVector); // calculates the first loss gradient
 
         int j = layers.size() - 1;
+        // builds corrections for each layer, starting from the last one
         for (DenseLayer layer : layers.reversed()) {
             BackwardCache backwardCache = layer.backward(lossGradient, optimizerCache.getForwardCaches().removeLast());
 
-            RealMatrix dw = backwardCache.getCorrection().getWeightsCorrection();
-            RealVector db = backwardCache.getCorrection().getBiasCorrection();
+            RealMatrix dw = backwardCache.getCorrection().getWeightsCorrection(); // get delta weights/gradient for weights
+            RealVector db = backwardCache.getCorrection().getBiasCorrection(); // get delta bias/gradient for biases
             //log.info("Backward correction: {} \n {}", dw, db);
 
+            Vdw.get(j).walkInOptimizedOrder(new DefaultRealMatrixChangingVisitor() {  // calculate first momentum for weights
+                @Override
+                public double visit(int row, int column, double value) {
+                    return beta1 * value + (1 - beta1) * dw.getEntry(row, column);
+                }
+            });
+            Vdb.get(j).walkInOptimizedOrder(new RealVectorChangingVisitor() {  // calculate first momentum for bias
+                @Override
+                public void start(int dimension, int start, int end) {
 
-            Vdw.set(j, Vdw.get(j).scalarMultiply(beta1).add(dw.scalarMultiply(1 - beta1)));  // TODO: optimize
-            Vdb.set(j, Vdb.get(j).mapMultiply(beta1).add(db.mapMultiply(1 - beta1)));
+                }
 
-            Sdw.set(j, Sdw.get(j).scalarMultiply(beta2).add(AiUtils.ebeMultiply(dw, dw).scalarMultiply(1 - beta2)));  // TODO: optimize
-            Sdb.set(j, Sdb.get(j).mapMultiply(beta2).add(db.ebeMultiply(db).mapMultiply(1 - beta2)));
+                @Override
+                public double visit(int index, double value) {
+                    return beta1 * value + (1 - beta1) * db.getEntry(index);
+                }
 
+                @Override
+                public double end() {
+                    return 0;
+                }
+            });
 
-            RealMatrix vdwCorrected = Vdw.get(j).scalarMultiply(1.0 / (1.0 - Math.pow(beta1, t)));
-            RealVector vdbCorrected = Vdb.get(j).mapMultiply(1.0 / (1.0 - Math.pow(beta1, t)));
+            Sdw.get(j).walkInOptimizedOrder(new DefaultRealMatrixChangingVisitor() {  // calculate second momentum for weights
+                @Override
+                public double visit(int row, int column, double value) {
+                    return beta2 * value + (1 - beta2) * dw.getEntry(row, column) * dw.getEntry(row, column);
+                }
+            });
 
-            RealMatrix sdwCorrected = Sdw.get(j).scalarMultiply(1.0 / (1.0 - Math.pow(beta2, t)));
-            RealVector sdbCorrected = Sdb.get(j).mapMultiply(1.0 / (1.0 - Math.pow(beta2, t)));
+            Sdb.get(j).walkInOptimizedOrder(new RealVectorChangingVisitor() { // calculate second momentum for bias
+                @Override
+                public void start(int dimension, int start, int end) {
 
+                }
 
+                @Override
+                public double visit(int index, double value) {
+                    return beta2 * value + (1 - beta2) * db.getEntry(index) * db.getEntry(index);
+                }
+
+                @Override
+                public double end() {
+                    return 0;
+                }
+            });
+
+            // bias correction for weights and bias (because vdw and vdb, sdw and sdb are biased because initialization with 0)
+            RealMatrix vdwCorrected = Vdw.get(j).scalarMultiply(1.0 / (1.0 - Math.pow(beta1, t)));  //TODO: check for possible optimizations
+            RealVector vdbCorrected = Vdb.get(j).mapMultiply(1.0 / (1.0 - Math.pow(beta1, t))); //TODO: check for possible optimizations
+
+            RealMatrix sdwCorrected = Sdw.get(j).scalarMultiply(1.0 / (1.0 - Math.pow(beta2, t))); //TODO: check for possible optimizations
+            RealVector sdbCorrected = Sdb.get(j).mapMultiply(1.0 / (1.0 - Math.pow(beta2, t))); //TODO: check for possible optimizations
+
+            // build correction matrices for weights and bias
             Correction correction = new Correction();
-            correction.setWeightsCorrection(AiUtils.ebeDivide(vdwCorrected, AiUtils.ebePow(sdwCorrected, 0.5).scalarAdd(epsilon)).scalarMultiply(learningRate)); // TODO: optimize
-            correction.setBiasCorrection(vdbCorrected.ebeDivide(AiUtils.ebePow(sdbCorrected, 0.5).mapAdd(epsilon)).mapMultiply(learningRate));
+            correction.setWeightsCorrection(AiUtils.ebeDivide(vdwCorrected, AiUtils.ebePow(sdwCorrected, 0.5).scalarAdd(epsilon)).scalarMultiply(learningRate)); //TODO: check for possible optimizations
+            correction.setBiasCorrection(vdbCorrected.ebeDivide(AiUtils.ebePow(sdbCorrected, 0.5).mapAdd(epsilon)).mapMultiply(learningRate)); // TODO: check for possible optimizations
 
-            corrections.add(correction);
+            corrections.add(correction); // add one correction for each layer to list of corrections
 
             // set lossGradient for next layer
             lossGradient = backwardCache.getBackpropagationError();
