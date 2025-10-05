@@ -7,7 +7,7 @@ import de.jlkp.ai.data.CsvDataSetReader;
 import de.jlkp.ai.data.DataSetReader;
 import de.jlkp.ai.data.DefaultTrainingSet;
 import de.jlkp.ai.layer.DenseLayer;
-import de.jlkp.ai.loss.CrossEntropy;
+import de.jlkp.ai.loss.CategoricalCrossEntropy;
 import de.jlkp.ai.optimizer.Adam;
 import lombok.extern.slf4j.Slf4j;
 
@@ -54,7 +54,7 @@ public class StartExperimental {
         model.addHiddenLayer(new DenseLayer(new ReLuActivation(), 64));
         model.addHiddenLayer(new DenseLayer(new SoftmaxActivation(), 5));
 
-        model.compile(255, new Adam(new CrossEntropy()));
+        model.compile(255, new Adam(new CategoricalCrossEntropy()));
         model.train(t, 5, 0.01, 10, true);
 
         log.info("{}", model.evaluate(t2, false));
@@ -85,7 +85,7 @@ public class StartExperimental {
         model.addHiddenLayer(new DenseLayer(new ReLuActivation(), 2));
         model.addHiddenLayer(new DenseLayer(new SoftmaxActivation(), 3));
 
-        model.compile(255, new Adam(new CrossEntropy()));
+        model.compile(255, new Adam(new CategoricalCrossEntropy()));
         model.train(t, 2, 0.01, 10, true);
 
         log.info("{}", model.evaluate(t2, false));

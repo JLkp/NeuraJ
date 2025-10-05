@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 import java.util.List;
 
+@Deprecated
 @Slf4j
 public class ReduceLROnPlateau {
     private final int patience;
@@ -30,7 +31,6 @@ public class ReduceLROnPlateau {
 
     public double updateLr(double lr){
         log.info("LR updated");
-        // wenn sich der ValLoss der letzten patience Epochen nicht um threshhold verbessert hat, wird die lr um factor reduziert
         if (valLossHistory.size() < patience) {
             return lr; // not enough history to decide
         }

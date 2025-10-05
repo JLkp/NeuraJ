@@ -12,7 +12,9 @@ import org.apache.commons.math3.linear.RealMatrix;
         @JsonSubTypes.Type(value = MSE.class, name = "mse")
 })
 public interface LossFunction {
+    /** Computes the loss of the network*/
     double loss(RealMatrix label, RealMatrix output);
 
+    /** Computes the gradient of the loss of the network*/
     RealMatrix gradient(RealMatrix label, RealMatrix output);
 }

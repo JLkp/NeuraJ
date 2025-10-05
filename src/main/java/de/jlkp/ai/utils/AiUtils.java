@@ -6,14 +6,7 @@ import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class AiUtils {
-    /**
-     * Erzeugt einen RealVector mit zufälligen Double-Werten im Intervall [min,max).
-     *
-     * @param dimension Dimension des Vektors
-     * @param min       untere Grenze (inklusive)
-     * @param max       obere Grenze (exklusive)
-     * @return RealVector mit zufälligen Einträgen
-     */
+    /** Creates Vector with random values inside given interval*/
     public static RealVector randomRealVector(int dimension, double min, double max) {
         double[] data = new double[dimension];
         ThreadLocalRandom rnd = ThreadLocalRandom.current();
@@ -23,6 +16,7 @@ public class AiUtils {
         return new ArrayRealVector(data, false);
     }
 
+    /** Creates Matrix with row/column dimensions with random values inside given interval*/
     public static RealMatrix randomRealMAtrix(int rows, int cols, double min, double max) {
         RealMatrix matrix = new Array2DRowRealMatrix(rows, cols);
         ThreadLocalRandom rnd = ThreadLocalRandom.current();
@@ -35,6 +29,7 @@ public class AiUtils {
         return matrix;
     }
 
+    /** Multiplies values from a and b: a_{ij} * b_{ij}*/
     public static RealMatrix ebeMultiply(RealMatrix a, RealMatrix b) {
         if (a.getRowDimension() != b.getRowDimension() || a.getColumnDimension() != b.getColumnDimension()) {
             throw new IllegalArgumentException("Matrices must have the same dimensions for element-wise multiplication.");
@@ -49,6 +44,7 @@ public class AiUtils {
         return result;
     }
 
+    /** Divides values from a and b: a_{ij} / b_{ij}*/
     public static RealMatrix ebeDivide(RealMatrix a, RealMatrix b) {
         if (a.getRowDimension() != b.getRowDimension() || a.getColumnDimension() != b.getColumnDimension()) {
             throw new IllegalArgumentException("Matrices must have the same dimensions for element-wise multiplication.");
@@ -65,31 +61,7 @@ public class AiUtils {
 
     }
 
-    public static BlockRealMatrix toBlockRealMatrix(RealMatrix a) {
-        if(a instanceof BlockRealMatrix) {
-            return (BlockRealMatrix)a;
-        }
-        return new BlockRealMatrix(a.getData());
-    }
-
-    public static BlockRealMatrix scalarMultiplyBlock(RealMatrix a, double scalar) {
-        BlockRealMatrix result = toBlockRealMatrix(a);
-        for (int i = 0; i < a.getRowDimension(); i++) {
-            for (int j = 0; j < a.getColumnDimension(); j++) {
-                result.setEntry(i, j, a.getEntry(i, j) * scalar);
-            }
-        }
-        return result;
-    }
-
-    public static BlockRealMatrix ebeMultiplyBlock(RealMatrix a, RealMatrix b) {
-        return toBlockRealMatrix(ebeMultiply(a, b));
-    }
-
-    public static BlockRealMatrix ebeDivideBlock(RealMatrix a, RealMatrix b) {
-        return toBlockRealMatrix(ebeDivide(a, b));
-    }
-
+    /** Returns the max value of a matrix*/
     public static double max(RealMatrix matrix) {
         double max = Double.NEGATIVE_INFINITY;
         for (int i = 0; i < matrix.getRowDimension(); i++) {
@@ -100,6 +72,7 @@ public class AiUtils {
         return max;
     }
 
+    /** Adds a bias to each value of the matrix w*/
     public static RealMatrix addBias(RealMatrix w, RealVector bias) {
         RealMatrix result = w.copy();
         for (int i = 0; i < result.getColumnDimension(); i++) {
@@ -108,6 +81,7 @@ public class AiUtils {
         return result;
     }
 
+    /** Computes the mean of the columns of a matrix and returns vector with mean of each column*/
     public static RealVector meanBias(RealMatrix b) {
         if (b.getColumnDimension() == 0) {
             throw new IllegalArgumentException("Matrix must have at least one column.");
@@ -124,13 +98,8 @@ public class AiUtils {
         return meanBias;
     }
 
-    /**
-     * Mischt die Spalten von zwei Matrizen (inputs und labels) synchron und in-place.
-     * Die Zuordnung zwischen inputs und labels bleibt erhalten.
-     *
-     * @param inputs RealMatrix mit Eingabedaten (z. B. 784 x 25000)
-     * @param labels RealMatrix mit Labels (z. B. 5 x 25000)
-     * @throws IllegalArgumentException wenn Matrizen null sind oder unterschiedliche Spaltenanzahlen haben
+    /** Shuffles the columns of two matrices (inputs and labels) in sync and in-place.
+     *  The association between inputs and labels is preserved.
      */
     public static void shuffle(RealMatrix inputs, RealMatrix labels) {
         if (inputs == null || labels == null) {
@@ -152,6 +121,7 @@ public class AiUtils {
         }
     }
 
+    /** Computes element-wise power to exponent of a matrix*/
     public static RealMatrix ebePow(RealMatrix matrix, double exponent) {
         RealMatrix result = matrix.copy();
         for (int i = 0; i < result.getRowDimension(); i++) {
@@ -162,6 +132,7 @@ public class AiUtils {
         return result;
     }
 
+    /** Computes element-wise power to exponent of a vector*/
     public static RealVector ebePow(RealVector vector, double exponent) {
         RealVector result = vector.copy();
         for (int i = 0; i < result.getDimension(); i++) {
@@ -171,13 +142,7 @@ public class AiUtils {
     }
 
 
-    /**
-     * Hilfsmethode zum Vertauschen von zwei Spalten in einer Matrix in-place.
-     *
-     * @param matrix Die zu verändernde Matrix
-     * @param col1   Index der ersten Spalte
-     * @param col2   Index der zweiten Spalte
-     */
+    /** Helper-method to shuffle two columns in a matrix in-place*/
     private static void swapColumns(RealMatrix matrix, int col1, int col2) {
         for (int row = 0; row < matrix.getRowDimension(); row++) {
             double temp = matrix.getEntry(row, col1);

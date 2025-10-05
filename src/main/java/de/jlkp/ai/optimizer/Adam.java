@@ -68,7 +68,7 @@ public class Adam implements Optimizer {
 
         RealMatrix outputVector = optimizerCache.getForwardCaches().getLast().getZ();
         outputVector = layers.getLast().getActivationFunction().activate(outputVector); // gets output of the last layer
-        RealMatrix lossGradient = lossFunction.gradient(optimizerCache.getLabelVector(), outputVector); // calculates the first loss gradient
+        RealMatrix lossGradient = lossFunction.gradient(outputVector, optimizerCache.getLabelVector()); // calculates the first loss gradient TODO: check order of parameters
 
         int j = layers.size() - 1;
         // builds corrections for each layer, starting from the last one
