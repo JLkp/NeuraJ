@@ -121,7 +121,7 @@ public class FNN implements NeuralNetwork, Serializable {
 
     }
 
-    /** Evaluates the network*/
+    /** Evaluates the accuracy of the network*/
     @Override
     public double evaluate(TrainingSet data, boolean verbose) {
 
@@ -146,13 +146,13 @@ public class FNN implements NeuralNetwork, Serializable {
         return (double) correctCount / predictions.getColumnDimension();
     }
 
-    /** Add a hidden layer to the network*/
+    /** Adds a hidden layer to the network*/
     @Override
     public void addHiddenLayer(DenseLayer layer) {
         this.layer.add(layer);
     }
 
-    /** Compiles the network, initializing weights and biases, and setting the optimizer*/
+    /** Compiles the network, initializing weights and biases, setting the optimizer*/
     @Override
     public void compile(double maxInputValue, Optimizer optimizer) {
         this.maxInputValue = maxInputValue;
