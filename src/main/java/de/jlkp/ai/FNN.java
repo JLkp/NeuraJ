@@ -89,7 +89,6 @@ public class FNN implements NeuralNetwork, Serializable {
             if(verbose){ // print loss if verbose is true
                 log.info("Loss: {}", loss / batches);
             }
-
         }
     }
 
